@@ -16,7 +16,7 @@ const firebaseConfig = {
 // --- Número de WhatsApp de Sara (el que recibe los pedidos) ---
 // IMPORTANTE: completar con el número real, con código de país, SIN el "+" ni espacios.
 // Ejemplo Argentina (Misiones), celular 376-4123456 -> "5493764123456"
-const TELEFONO_SARA = "COMPLETAR_NUMERO_AQUI";
+const TELEFONO_SARA = "+5493755603085";
 
 // --- Nombre del negocio (para textos y mensajes) ---
 const NOMBRE_NEGOCIO = "Sara'sKiss";
