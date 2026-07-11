@@ -260,7 +260,7 @@ document.getElementById('loginBtn').onclick = async function(){
       'auth/invalid-api-key': 'La configuración de Firebase (config.js) tiene una clave inválida.',
       'auth/api-key-not-valid': 'La configuración de Firebase (config.js) tiene una clave inválida.'
     };
-    errDiv.textContent = (mensajes[e.code] || ('Error al ingresar (' + e.code + ').'));
+    errDiv.textContent = (mensajes[e.code] || 'Correo o contraseña incorrectos.') + '  [' + e.code + ']';
     errDiv.style.display = 'block';
   }
 }
