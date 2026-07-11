@@ -243,12 +243,25 @@ let fotosTemp = [];
 document.getElementById('loginBtn').onclick = async function(){
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value;
-  document.getElementById('loginError').style.display = 'none';
+  const errDiv = document.getElementById('loginError');
+  errDiv.style.display = 'none';
   document.getElementById('loginInfo').style.display = 'none';
   try{
     await signInWithEmailAndPassword(auth, email, pass);
   }catch(e){
-    document.getElementById('loginError').style.display = 'block';
+    const mensajes = {
+      'auth/invalid-email': 'El correo no tiene un formato válido.',
+      'auth/user-not-found': 'No existe ningún usuario con ese correo.',
+      'auth/wrong-password': 'La contraseña es incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/user-disabled': 'Esta cuenta fue deshabilitada.',
+      'auth/too-many-requests': 'Demasiados intentos fallidos. Esperá unos minutos y volvé a probar.',
+      'auth/network-request-failed': 'No hay conexión a internet en este momento.',
+      'auth/invalid-api-key': 'La configuración de Firebase (config.js) tiene una clave inválida.',
+      'auth/api-key-not-valid': 'La configuración de Firebase (config.js) tiene una clave inválida.'
+    };
+    errDiv.textContent = (mensajes[e.code] || ('Error al ingresar (' + e.code + ').'));
+    errDiv.style.display = 'block';
   }
 }
 document.getElementById('logoutBtn').onclick = function(){ signOut(auth); }
