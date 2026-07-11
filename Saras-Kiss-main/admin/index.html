@@ -28,7 +28,6 @@
   /* Login */
   #loginScreen{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; gap:14px; }
   #loginScreen h1{ font-size:26px; color:var(--accent-deep); margin-bottom:4px; }
-  #loginScreen .login-logo{ max-width:200px; max-height:120px; margin-bottom:4px; }
   #loginScreen .field{ width:100%; }
   #loginScreen label{ font-size:11px; color:var(--ink-soft); display:block; margin-bottom:4px; }
   #loginScreen input{
@@ -58,7 +57,6 @@
     padding:16px 18px; border-bottom:1px solid var(--line);
   }
   header h1{ font-size:18px; color:var(--accent-deep); }
-  header .header-logo{ max-height:36px; }
   #logoutBtn{ background:none; border:none; font-size:11px; color:var(--ink-soft); text-decoration:underline; }
 
   nav{ display:flex; border-bottom:1px solid var(--line); }
@@ -151,8 +149,7 @@
 
   <!-- LOGIN -->
   <div id="loginScreen">
-    <img src="logo.png" alt="Sara'sKiss" class="login-logo" onerror="this.style.display='none'; document.getElementById('loginFallbackTitle').style.display='block';">
-    <h1 id="loginFallbackTitle" style="display:none;">Sara'sKiss</h1>
+    <h1>Sara'sKiss</h1>
     <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">Panel de administración</div>
     <div class="field"><label>Correo</label><input type="email" id="loginEmail"></div>
     <div class="field">
@@ -173,8 +170,7 @@
   <!-- APP -->
   <div id="appShell">
     <header>
-      <img src="logo.png" alt="Sara'sKiss" class="header-logo" onerror="this.style.display='none'; document.getElementById('headerFallbackTitle').style.display='block';">
-      <h1 id="headerFallbackTitle" style="display:none;">Sara'sKiss</h1>
+      <h1>Sara'sKiss</h1>
       <button id="logoutBtn">Cerrar sesión</button>
     </header>
     <nav>
