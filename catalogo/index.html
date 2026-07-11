@@ -22,11 +22,19 @@
   html,body{ height:100%; }
   body{
     font-family:'Nunito Sans', sans-serif;
+    background:#EAE1D6;
+    min-height:100%;
+  }
+  #app{
     background:var(--paper);
     display:flex; flex-direction:column;
     max-width:480px; margin:0 auto;
     position:relative; overflow-x:hidden;
-    min-height:100%;
+    min-height:100vh;
+  }
+  @media (min-width:481px){
+    body{ display:flex; justify-content:center; }
+    #app{ box-shadow:0 0 40px rgba(91,58,40,.18); }
   }
 
   header{
@@ -95,7 +103,7 @@
   .stock-tag.out{ background:#F0D3CE; color:#A3402F; }
 
   .cart-bubble{
-    position:fixed; bottom:22px; right:calc(50% - 240px + 20px);
+    position:absolute; bottom:22px; right:20px;
     background:var(--accent-deep); color:#fff;
     border-radius:24px; padding:12px 20px;
     display:none; align-items:center; gap:8px;
@@ -103,7 +111,6 @@
     box-shadow:0 8px 20px rgba(168,92,60,.4);
     cursor:pointer; z-index:15;
   }
-  @media (max-width:520px){ .cart-bubble{ right:20px; } }
   .cart-bubble .count{
     background:rgba(255,255,255,.25); border-radius:50%;
     width:20px; height:20px; display:flex; align-items:center; justify-content:center;
@@ -111,9 +118,8 @@
   }
 
   .overlay{
-    position:fixed; inset:0; background:rgba(42,33,29,.45);
+    position:absolute; inset:0; background:rgba(42,33,29,.45);
     display:none; z-index:30;
-    max-width:480px; margin:0 auto;
   }
   .overlay.open{ display:block; }
 
@@ -183,10 +189,9 @@
 
   /* Detalle de producto */
   .detail{
-    position:fixed; inset:0; background:var(--paper);
+    position:absolute; inset:0; background:var(--paper);
     z-index:40; display:flex; flex-direction:column;
     transform:translateX(100%); transition:transform .28s ease;
-    max-width:480px; margin:0 auto;
   }
   .detail.open{ transform:translateX(0); }
   .gallery{ position:relative; height:340px; background:#111; flex-shrink:0; }
@@ -210,6 +215,8 @@
 </style>
 </head>
 <body>
+
+<div id="app">
 
   <header>
     <img id="logoImg" src="logo.png" alt="Sara'sKiss" onerror="this.style.display='none'">
@@ -282,6 +289,8 @@
       <button class="add-cta" id="dAddBtn">Agregar al pedido</button>
     </div>
   </div>
+
+</div>
 
 <script src="../config.js"></script>
 <script type="module">

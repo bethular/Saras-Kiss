@@ -34,8 +34,21 @@
     width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
     background:var(--card); font-size:13px; color:var(--ink);
   }
+  #loginScreen .pass-wrap{ position:relative; }
+  #loginScreen .pass-wrap input{ padding-right:42px; }
+  #loginScreen .pass-toggle{
+    position:absolute; right:4px; top:50%; transform:translateY(-50%);
+    background:none; border:none; padding:8px; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft);
+  }
+  #loginScreen .pass-toggle svg{ width:18px; height:18px; }
+  #forgotPassLink{
+    align-self:flex-end; font-size:11.5px; color:var(--ink-soft);
+    text-decoration:underline; background:none; border:none; margin-top:-8px; padding:0;
+  }
   #loginBtn{ width:100%; padding:13px; border:none; border-radius:12px; background:var(--accent-deep); color:#fff; font-weight:700; font-size:13.5px; }
   #loginError{ color:var(--danger); font-size:12px; text-align:center; display:none; }
+  #loginInfo{ color:var(--confirm); font-size:12px; text-align:center; display:none; }
 
   /* App shell */
   #appShell{ display:none; flex:1; flex-direction:column; }
@@ -139,8 +152,18 @@
     <h1>Sara'sKiss</h1>
     <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">Panel de administración</div>
     <div class="field"><label>Correo</label><input type="email" id="loginEmail"></div>
-    <div class="field"><label>Contraseña</label><input type="password" id="loginPass"></div>
+    <div class="field">
+      <label>Contraseña</label>
+      <div class="pass-wrap">
+        <input type="password" id="loginPass">
+        <button type="button" class="pass-toggle" id="togglePassBtn" title="Mostrar contraseña">
+          <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button type="button" id="forgotPassLink">¿Olvidaste tu contraseña?</button>
     <div id="loginError">Correo o contraseña incorrectos.</div>
+    <div id="loginInfo"></div>
     <button id="loginBtn">Ingresar</button>
   </div>
 
@@ -206,7 +229,7 @@ import {
   getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 const app = initializeApp(firebaseConfig);
@@ -221,6 +244,7 @@ document.getElementById('loginBtn').onclick = async function(){
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value;
   document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginInfo').style.display = 'none';
   try{
     await signInWithEmailAndPassword(auth, email, pass);
   }catch(e){
@@ -228,6 +252,41 @@ document.getElementById('loginBtn').onclick = async function(){
   }
 }
 document.getElementById('logoutBtn').onclick = function(){ signOut(auth); }
+
+// Mostrar/ocultar contraseña
+const loginPassInput = document.getElementById('loginPass');
+const togglePassBtn = document.getElementById('togglePassBtn');
+const eyeIcon = document.getElementById('eyeIcon');
+togglePassBtn.onclick = function(){
+  const oculta = loginPassInput.type === 'password';
+  loginPassInput.type = oculta ? 'text' : 'password';
+  togglePassBtn.title = oculta ? 'Ocultar contraseña' : 'Mostrar contraseña';
+  eyeIcon.innerHTML = oculta
+    ? '<path d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a21.6 21.6 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-3.22 4.36M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/>'
+    : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+// Recuperar contraseña
+document.getElementById('forgotPassLink').onclick = async function(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const errDiv = document.getElementById('loginError');
+  const infoDiv = document.getElementById('loginInfo');
+  errDiv.style.display = 'none';
+  infoDiv.style.display = 'none';
+  if(!email){
+    errDiv.textContent = 'Escribí tu correo arriba primero, y después tocá "¿Olvidaste tu contraseña?".';
+    errDiv.style.display = 'block';
+    return;
+  }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    infoDiv.textContent = 'Te enviamos un correo a ' + email + ' con un link para crear una contraseña nueva. Revisá también la carpeta de spam.';
+    infoDiv.style.display = 'block';
+  }catch(e){
+    errDiv.textContent = 'No pudimos enviar el correo. Revisá que esté bien escrito.';
+    errDiv.style.display = 'block';
+  }
+}
 
 onAuthStateChanged(auth, (user) => {
   if(user){
