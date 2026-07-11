@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Sara'sKiss — Catálogo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FEF7ED;
+    --card:#FFFDF8;
+    --icon-bg:#F6E3D6;
+    --ink:#5B3A28;
+    --ink-soft:#8B6F5D;
+    --accent:#C97C55;
+    --accent-deep:#A85C3C;
+    --confirm:#8FA377;
+    --line:#E7D6C6;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ height:100%; }
+  body{
+    font-family:'Nunito Sans', sans-serif;
+    background:var(--paper);
+    display:flex; flex-direction:column;
+    max-width:480px; margin:0 auto;
+    position:relative; overflow-x:hidden;
+    min-height:100%;
+  }
+
+  header{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    padding:22px 18px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  header img{ max-height:110px; max-width:70%; }
+
+  .menu-btn{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--card); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; position:absolute; left:18px; bottom:14px;
+  }
+  .menu-btn svg{ width:18px; height:18px; }
+  .menu-btn .badge{
+    position:absolute; top:-4px; right:-4px;
+    background:var(--accent-deep); color:#fff;
+    font-size:9px; width:15px; height:15px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  main{ flex:1; padding-bottom:110px; }
+
+  #loadingMsg{ text-align:center; color:var(--ink-soft); padding:40px 20px; font-size:13px; }
+  #emptyMsg{ display:none; text-align:center; color:var(--ink-soft); padding:40px 20px; font-size:13px; }
+
+  .grid{
+    padding:16px 18px;
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  }
+  .card{
+    background:var(--card); border-radius:16px; padding:12px;
+    display:flex; flex-direction:column; gap:6px;
+    box-shadow:0 2px 6px rgba(91,58,40,.08);
+    cursor:pointer;
+  }
+  .icon-wrap{
+    height:100px; border-radius:12px; background:var(--icon-bg);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .icon-wrap img{ width:100%; height:100%; object-fit:cover; }
+  .icon-wrap svg{ width:34px; height:34px; }
+  .p-name{ font-family:'DM Serif Display', serif; font-size:14px; color:var(--ink); line-height:1.2; }
+  .p-desc{ font-size:10.5px; color:var(--ink-soft); line-height:1.3; }
+  .p-row{ display:flex; align-items:center; justify-content:space-between; margin-top:2px; }
+  .price-seal{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; font-weight:500;
+    color:var(--accent-deep); background:var(--paper);
+    border:1.5px dashed var(--accent);
+    padding:2px 7px; border-radius:20px;
+  }
+  .add-btn{
+    width:26px; height:26px; border-radius:50%; border:none;
+    background:var(--confirm); color:#fff; font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stock-tag{
+    font-size:9.5px; padding:2px 7px; border-radius:8px; margin-top:2px;
+    display:inline-block; width:fit-content;
+  }
+  .stock-tag.low{ background:#F3E3B8; color:#7A5B1E; }
+  .stock-tag.out{ background:#F0D3CE; color:#A3402F; }
+
+  .cart-bubble{
+    position:fixed; bottom:22px; right:calc(50% - 240px + 20px);
+    background:var(--accent-deep); color:#fff;
+    border-radius:24px; padding:12px 20px;
+    display:none; align-items:center; gap:8px;
+    font-size:13px; font-weight:700;
+    box-shadow:0 8px 20px rgba(168,92,60,.4);
+    cursor:pointer; z-index:15;
+  }
+  @media (max-width:520px){ .cart-bubble{ right:20px; } }
+  .cart-bubble .count{
+    background:rgba(255,255,255,.25); border-radius:50%;
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+    font-size:11px;
+  }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(42,33,29,.45);
+    display:none; z-index:30;
+    max-width:480px; margin:0 auto;
+  }
+  .overlay.open{ display:block; }
+
+  .cat-sheet, .cart-sheet, .checkout-sheet{
+    position:absolute; left:0; right:0; bottom:0;
+    background:var(--paper); border-radius:22px 22px 0 0;
+    padding:18px 20px 26px;
+    transform:translateY(100%); transition:transform .25s ease;
+    max-height:85vh; display:flex; flex-direction:column;
+  }
+  .overlay.open .cat-sheet,
+  .overlay.open .cart-sheet,
+  .overlay.open .checkout-sheet{ transform:translateY(0); }
+
+  .sheet-h{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .sheet-h h3{ font-family:'DM Serif Display', serif; color:var(--ink); font-size:17px; }
+  .sheet-h span{ font-size:12px; color:var(--ink-soft); cursor:pointer; }
+
+  .cat-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 4px; border-bottom:1px solid var(--line);
+    font-size:13px; color:var(--ink); cursor:pointer;
+  }
+  .cat-item.active{ color:var(--accent-deep); font-weight:700; }
+
+  .cart-list{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+  .cart-item-row{ background:var(--card); border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; }
+  .ci-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .ci-name{ font-family:'DM Serif Display', serif; font-size:13.5px; color:var(--ink); }
+  .ci-sub{ font-size:11px; color:var(--ink-soft); display:flex; align-items:center; gap:8px; }
+  .ci-price{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--accent-deep); white-space:nowrap; }
+  .ci-qty-btn{ width:20px; height:20px; border-radius:6px; border:1px solid var(--line); background:var(--paper); font-size:12px; cursor:pointer; }
+  .ci-remove{ font-size:10px; color:#A3402F; cursor:pointer; text-decoration:underline; }
+
+  .stock-alert{
+    background:#FBEAE6; border:1px solid #E9BDB2; border-radius:10px;
+    padding:9px 10px; font-size:11px; color:#7A3A2A; line-height:1.4;
+  }
+  .stock-alert .opts{ display:flex; gap:8px; margin-top:8px; }
+  .stock-alert button{ flex:1; font-size:10.5px; padding:6px 4px; border-radius:8px; border:none; font-weight:700; cursor:pointer; }
+  .btn-keep{ background:var(--confirm); color:#fff; }
+  .btn-remove{ background:#fff; color:#A3402F; border:1px solid #E9BDB2 !important; }
+
+  .cart-total{ display:flex; justify-content:space-between; align-items:center; padding:14px 2px 10px; font-size:14px; color:var(--ink); font-weight:700; }
+  .wa-btn{
+    width:100%; padding:14px; border:none; border-radius:14px;
+    background:#3E7A4A; color:#fff; font-weight:700; font-size:13.5px;
+    display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+  }
+  .wa-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .field{ margin-bottom:12px; }
+  .field label{ font-size:11px; color:var(--ink-soft); display:block; margin-bottom:4px; }
+  .field input{
+    width:100%; padding:10px 12px; border-radius:10px;
+    border:1px solid var(--line); background:var(--card);
+    font-family:'Nunito Sans', sans-serif; font-size:13px; color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-color:var(--accent); }
+  .preview-label{ font-size:11px; color:var(--ink-soft); margin:6px 0 6px; }
+  .preview-box{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:12px; font-size:11.5px; color:var(--ink); line-height:1.6;
+    white-space:pre-wrap; overflow-y:auto; font-family:'IBM Plex Mono', monospace;
+    max-height:180px;
+  }
+
+  /* Detalle de producto */
+  .detail{
+    position:fixed; inset:0; background:var(--paper);
+    z-index:40; display:flex; flex-direction:column;
+    transform:translateX(100%); transition:transform .28s ease;
+    max-width:480px; margin:0 auto;
+  }
+  .detail.open{ transform:translateX(0); }
+  .gallery{ position:relative; height:340px; background:#111; flex-shrink:0; }
+  .gallery-track{ display:flex; height:100%; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
+  .gallery-track::-webkit-scrollbar{ display:none; }
+  .slide{ min-width:100%; height:100%; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; background:var(--icon-bg); }
+  .slide img{ width:100%; height:100%; object-fit:cover; }
+  .slide svg{ width:64px; height:64px; }
+  .back-btn{ position:absolute; top:16px; left:16px; z-index:2; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.85); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .dots{ position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; gap:6px; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.5); }
+  .dot.on{ background:#fff; width:16px; border-radius:4px; }
+  .detail-body{ flex:1; overflow-y:auto; padding:18px 20px 24px; }
+  .detail-body .p-name{ font-size:19px; margin-bottom:4px; }
+  .detail-body .price-seal{ font-size:15px; padding:4px 10px; margin:6px 0 14px; display:inline-block; }
+  .detail-body .p-desc-full{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:18px; }
+  .qty-row{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .qty-btn{ width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--card); font-size:16px; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .qty-num{ font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink); }
+  .add-cta{ width:100%; padding:13px; border:none; border-radius:14px; background:var(--confirm); color:#fff; font-weight:700; font-size:13.5px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+  <header>
+    <img id="logoImg" src="logo.png" alt="Sara'sKiss" onerror="this.style.display='none'">
+    <div class="menu-btn" onclick="abrirMenuCategorias()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#A85C3C" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <div class="badge" id="catCount">0</div>
+    </div>
+  </header>
+
+  <main>
+    <div id="loadingMsg">Cargando catálogo…</div>
+    <div id="emptyMsg">Todavía no hay productos cargados.</div>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <div class="cart-bubble" id="cartBubble" onclick="abrirCarrito()">
+    <span>Ver pedido</span>
+    <span class="count" id="cartCount">0</span>
+  </div>
+
+  <!-- Menú de categorías -->
+  <div class="overlay" id="ovCat" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="cat-sheet">
+      <div class="sheet-h"><h3>Categorías</h3><span onclick="document.getElementById('ovCat').classList.remove('open')">Cerrar ✕</span></div>
+      <div id="catList"></div>
+    </div>
+  </div>
+
+  <!-- Carrito -->
+  <div class="overlay" id="ovCart" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="cart-sheet">
+      <div class="sheet-h"><h3>Tu pedido</h3><span onclick="document.getElementById('ovCart').classList.remove('open')">Cerrar ✕</span></div>
+      <div class="cart-list" id="cartList"></div>
+      <div class="cart-total"><span>Total</span><span id="cartTotal">$0</span></div>
+      <button class="wa-btn" id="btnContinuar" onclick="abrirCheckout()">Continuar pedido</button>
+    </div>
+  </div>
+
+  <!-- Checkout -->
+  <div class="overlay" id="ovCheckout" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="checkout-sheet">
+      <div class="sheet-h"><h3>Últimos datos</h3><span onclick="document.getElementById('ovCheckout').classList.remove('open')">Cerrar ✕</span></div>
+      <div class="field"><label>Tu nombre</label><input type="text" id="coNombre" oninput="actualizarPreview()"></div>
+      <div class="field"><label>Tu teléfono</label><input type="text" id="coTelefono" oninput="actualizarPreview()"></div>
+      <div class="preview-label">Vista previa del mensaje</div>
+      <div class="preview-box" id="preview"></div>
+      <button class="wa-btn" id="btnEnviar" style="margin-top:14px;" onclick="enviarPedido()">Enviar pedido por WhatsApp</button>
+    </div>
+  </div>
+
+  <!-- Detalle de producto -->
+  <div class="detail" id="detail">
+    <div class="gallery">
+      <div class="back-btn" onclick="cerrarDetalle()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#5B3A28" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="gallery-track" id="galleryTrack" onscroll="actualizarPuntos()"></div>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="detail-body">
+      <div class="p-name" id="dName"></div>
+      <span class="price-seal" id="dPrice"></span>
+      <div class="p-desc-full" id="dDesc"></div>
+      <div id="dStock"></div>
+      <div class="qty-row">
+        <div class="qty-btn" onclick="cambiarCantidadDetalle(-1)">−</div>
+        <div class="qty-num" id="dQty">1</div>
+        <div class="qty-btn" onclick="cambiarCantidadDetalle(1)">+</div>
+      </div>
+      <button class="add-cta" id="dAddBtn">Agregar al pedido</button>
+    </div>
+  </div>
+
+<script src="../config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let productos = [];
+let categorias = [];
+let carrito = []; // { id, nombre, precio, cantidad, stock }
+let categoriaActiva = "Todo";
+let productoDetalleActual = null;
+
+async function cargarDatos(){
+  try{
+    const [prodSnap, catSnap] = await Promise.all([
+      getDocs(collection(db, "productos")),
+      getDocs(collection(db, "categorias"))
+    ]);
+    productos = prodSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.activo !== false);
+    categorias = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('loadingMsg').style.display = 'none';
+    if(productos.length === 0){
+      document.getElementById('emptyMsg').style.display = 'block';
+    }
+    renderCategorias();
+    renderGrid();
+  }catch(e){
+    document.getElementById('loadingMsg').textContent = 'No se pudo cargar el catálogo. Revisá tu conexión.';
+    console.error(e);
+  }
+}
+
+function iconoGenerico(){
+  return `<svg viewBox="0 0 40 40" fill="none" stroke="#A85C3C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16c0-3 2-5 5-5h14c3 0 5 2 5 5v12c0 3-2 5-5 5H13c-3 0-5-2-5-5V16z"/></svg>`;
+}
+
+function renderCategorias(){
+  document.getElementById('catCount').textContent = categorias.length;
+  const list = document.getElementById('catList');
+  const todas = [{nombre:'Todo'}, ...categorias];
+  list.innerHTML = todas.map(c => {
+    const count = c.nombre === 'Todo' ? productos.length : productos.filter(p => p.categoria === c.nombre).length;
+    return `<div class="cat-item ${c.nombre===categoriaActiva?'active':''}" onclick="filtrarCategoria('${c.nombre.replace(/'/g,"\\'")}')"><span>${c.nombre}</span><span>${count}</span></div>`;
+  }).join('');
+}
+
+window.filtrarCategoria = function(nombre){
+  categoriaActiva = nombre;
+  document.getElementById('ovCat').classList.remove('open');
+  renderCategorias();
+  renderGrid();
+}
+
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  const lista = categoriaActiva === 'Todo' ? productos : productos.filter(p => p.categoria === categoriaActiva);
+  grid.innerHTML = lista.map(p => {
+    const foto = (p.fotos && p.fotos[0]) ? `<img src="${p.fotos[0]}">` : iconoGenerico();
+    let stockTag = '';
+    if(p.stock !== null && p.stock !== undefined){
+      if(p.stock <= 0) stockTag = `<span class="stock-tag out">Sin stock</span>`;
+      else if(p.stock <= 3) stockTag = `<span class="stock-tag low">Quedan ${p.stock}</span>`;
+    }
+    return `
+    <div class="card" onclick="abrirDetalle('${p.id}')">
+      <div class="icon-wrap">${foto}</div>
+      <div class="p-name">${p.nombre}</div>
+      <div class="p-desc">${p.descripcion ? p.descripcion.slice(0,40) : ''}</div>
+      ${stockTag}
+      <div class="p-row">
+        <span class="price-seal">$${Number(p.precio).toLocaleString('es-AR')}</span>
+        <button class="add-btn" onclick="event.stopPropagation(); agregarRapido('${p.id}')">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.abrirMenuCategorias = function(){ document.getElementById('ovCat').classList.add('open'); }
+
+window.agregarRapido = function(id){
+  const p = productos.find(x => x.id === id);
+  agregarAlCarrito(p, 1);
+}
+
+function agregarAlCarrito(p, cantidad){
+  const existente = carrito.find(i => i.id === p.id);
+  if(existente){ existente.cantidad += cantidad; }
+  else { carrito.push({ id:p.id, nombre:p.nombre, precio:p.precio, cantidad, stock:p.stock }); }
+  actualizarCartBubble();
+}
+
+function actualizarCartBubble(){
+  const bubble = document.getElementById('cartBubble');
+  const totalItems = carrito.reduce((a,i) => a + i.cantidad, 0);
+  document.getElementById('cartCount').textContent = totalItems;
+  bubble.style.display = totalItems > 0 ? 'flex' : 'none';
+}
+
+window.abrirCarrito = function(){
+  renderCarrito();
+  document.getElementById('ovCart').classList.add('open');
+}
+
+function renderCarrito(){
+  const list = document.getElementById('cartList');
+  list.innerHTML = carrito.map((item, idx) => {
+    const sinStock = item.stock !== null && item.stock !== undefined && item.stock <= 0;
+    return `
+    <div class="cart-item-row" data-idx="${idx}">
+      <div class="ci-top">
+        <div>
+          <div class="ci-name">${item.nombre}</div>
+          <div class="ci-sub">
+            <span class="ci-qty-btn" onclick="cambiarCantidadCarrito(${idx},-1)">−</span>
+            Cant: ${item.cantidad}
+            <span class="ci-qty-btn" onclick="cambiarCantidadCarrito(${idx},1)">+</span>
+            <span class="ci-remove" onclick="quitarDelCarrito(${idx})">quitar</span>
+          </div>
+        </div>
+        <div class="ci-price">$${(item.precio*item.cantidad).toLocaleString('es-AR')}</div>
+      </div>
+      ${sinStock ? `
+      <div class="stock-alert">
+        Este artículo se quedó sin stock. ¿Qué querés hacer?
+        <div class="opts">
+          <button class="btn-keep" onclick="resolverStock(${idx}, true)">Seguir con el pedido</button>
+          <button class="btn-remove" onclick="resolverStock(${idx}, false)">Quitar del pedido</button>
+        </div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  actualizarTotal();
+}
+
+window.cambiarCantidadCarrito = function(idx, delta){
+  carrito[idx].cantidad = Math.max(1, carrito[idx].cantidad + delta);
+  renderCarrito();
+  actualizarCartBubble();
+}
+window.quitarDelCarrito = function(idx){
+  carrito.splice(idx,1);
+  renderCarrito();
+  actualizarCartBubble();
+}
+window.resolverStock = function(idx, mantener){
+  if(!mantener){ carrito.splice(idx,1); }
+  else { carrito[idx].confirmadoSinStock = true; }
+  renderCarrito();
+  actualizarCartBubble();
+}
+
+function actualizarTotal(){
+  const total = carrito.reduce((a,i) => a + i.precio*i.cantidad, 0);
+  document.getElementById('cartTotal').textContent = '$' + total.toLocaleString('es-AR');
+  document.getElementById('btnContinuar').disabled = carrito.length === 0;
+}
+
+window.abrirCheckout = function(){
+  if(carrito.length === 0) return;
+  document.getElementById('ovCart').classList.remove('open');
+  document.getElementById('ovCheckout').classList.add('open');
+  actualizarPreview();
+}
+
+window.actualizarPreview = function(){
+  const nombre = document.getElementById('coNombre').value.trim();
+  const telefono = document.getElementById('coTelefono').value.trim();
+  const total = carrito.reduce((a,i) => a + i.precio*i.cantidad, 0);
+  const items = carrito.map(i => `🛍 ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toLocaleString('es-AR')}`).join('\n');
+  document.getElementById('preview').textContent =
+`¡Hola! Quiero hacer este pedido a ${NOMBRE_NEGOCIO} 🧵
+
+${items}
+
+💰 Total: $${total.toLocaleString('es-AR')}
+
+📌 Datos:
+Nombre: ${nombre || '________'}
+Teléfono: ${telefono || '________'}
+
+¡Gracias!`;
+}
+
+window.enviarPedido = async function(){
+  const nombre = document.getElementById('coNombre').value.trim();
+  const telefono = document.getElementById('coTelefono').value.trim();
+  if(!nombre || !telefono){
+    alert('Completá tu nombre y teléfono antes de enviar.');
+    return;
+  }
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const total = carrito.reduce((a,i) => a + i.precio*i.cantidad, 0);
+  const items = carrito.map(i => ({ productoId:i.id, nombre:i.nombre, cantidad:i.cantidad, precio:i.precio }));
+
+  try{
+    await addDoc(collection(db, "pedidos"), {
+      nombreCliente: nombre,
+      telefono: telefono,
+      items,
+      total,
+      estado: 'nuevo',
+      fecha: serverTimestamp()
+    });
+  }catch(e){
+    console.error('No se pudo guardar el pedido en Firebase', e);
+    // seguimos igual: el WhatsApp es la notificación real
+  }
+
+  const mensaje = document.getElementById('preview').textContent;
+  const url = `https://wa.me/${TELEFONO_SARA}?text=${encodeURIComponent(mensaje)}`;
+  window.location.href = url;
+}
+
+// ---- Detalle de producto ----
+window.abrirDetalle = function(id){
+  const p = productos.find(x => x.id === id);
+  productoDetalleActual = p;
+  document.getElementById('dName').textContent = p.nombre;
+  document.getElementById('dPrice').textContent = '$' + Number(p.precio).toLocaleString('es-AR');
+  document.getElementById('dDesc').textContent = p.descripcion || '';
+  document.getElementById('dQty').textContent = '1';
+
+  let stockHtml = '';
+  if(p.stock !== null && p.stock !== undefined){
+    if(p.stock <= 0) stockHtml = `<span class="stock-tag out">Sin stock</span>`;
+    else if(p.stock <= 3) stockHtml = `<span class="stock-tag low">Quedan ${p.stock}</span>`;
+  }
+  document.getElementById('dStock').innerHTML = stockHtml;
+
+  const fotos = (p.fotos && p.fotos.length) ? p.fotos : [null];
+  document.getElementById('galleryTrack').innerHTML = fotos.map(f =>
+    `<div class="slide">${f ? `<img src="${f}">` : iconoGenerico()}</div>`
+  ).join('');
+  document.getElementById('dots').innerHTML = fotos.map((_,i) => `<div class="dot ${i===0?'on':''}"></div>`).join('');
+
+  document.getElementById('dAddBtn').onclick = function(){
+    const cant = parseInt(document.getElementById('dQty').textContent);
+    agregarAlCarrito(p, cant);
+    cerrarDetalle();
+  };
+
+  document.getElementById('detail').classList.add('open');
+}
+window.cerrarDetalle = function(){ document.getElementById('detail').classList.remove('open'); }
+window.cambiarCantidadDetalle = function(delta){
+  const el = document.getElementById('dQty');
+  el.textContent = Math.max(1, parseInt(el.textContent) + delta);
+}
+window.actualizarPuntos = function(){
+  const track = document.getElementById('galleryTrack');
+  const idx = Math.round(track.scrollLeft / track.clientWidth);
+  document.querySelectorAll('#dots .dot').forEach((d,i) => d.classList.toggle('on', i===idx));
+}
+
+cargarDatos();
+</script>
+</body>
+</html>
