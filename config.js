@@ -5,7 +5,7 @@
 
 // --- Firebase (ya configurado con tu proyecto real) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyA9vyf8tMLqz8zm7DetoaHfJvvMg8BjrjU",
+  apiKey: "AIzaSyA9vyf8tMLqz0zm7DetoaHfJvvMg8BjrjU",
   authDomain: "saraskiss-9e343.firebaseapp.com",
   projectId: "saraskiss-9e343",
   storageBucket: "saraskiss-9e343.firebasestorage.app",
