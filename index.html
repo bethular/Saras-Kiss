@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12151a">
+<title>Punto Electro — Reparaciones</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div class="app">
+  <header>
+    <p class="eyebrow">Registro / Reparaciones</p>
+    <h1>Punto Electro</h1>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="reparaciones">Reparaciones</button>
+    <button class="tab-btn" data-tab="clientes">Clientes</button>
+    <button class="tab-btn" data-tab="caja">Caja</button>
+    <button class="tab-btn" data-tab="sync">Sincronizar</button>
+  </nav>
+
+  <!-- ================= TAB: REPARACIONES ================= -->
+  <section id="tab-reparaciones" class="tab-content active">
+
+    <div class="panel">
+      <h2>Nueva orden de trabajo</h2>
+      <div class="grid2">
+        <div class="field">
+          <label>Cliente</label>
+          <input type="text" id="f_cliente" list="clientesList" placeholder="Buscar o escribir nombre nuevo...">
+          <datalist id="clientesList"></datalist>
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="tel" id="f_telefono" placeholder="Ej: 549376...">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="f_fecha">
+        </div>
+        <div class="field">
+          <label>Equipo</label>
+          <input type="text" id="f_equipo" placeholder="Ej: Notebook Lenovo, TV Samsung...">
+        </div>
+      </div>
+      <div class="field">
+        <label>Fotos del producto</label>
+        <input type="file" id="f_fotos" accept="image/*" multiple capture="environment">
+      </div>
+      <div id="fotoPreview" class="foto-preview"></div>
+      <div class="field">
+        <label>Descripción del trabajo</label>
+        <textarea id="f_desc" placeholder="Ej: cambio de fuente, no enciende, limpieza..."></textarea>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Presupuesto (opcional, se puede definir después)</label>
+          <input type="number" id="f_presupuesto" placeholder="0" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Estado del trabajo</label>
+          <select id="f_estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="entregado">Entregado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mini-panel">
+        <label class="mini-panel-label">Movimiento inicial (opcional)</label>
+        <div class="grid2">
+          <div class="field">
+            <label>Tipo</label>
+            <select id="f_mov_tipo">
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+          </div>
+          <div class="field" id="f_mov_subtipo_wrap">
+            <label>¿Qué es este ingreso?</label>
+            <select id="f_mov_subtipo">
+              <option value="adelanto">Adelanto / seña</option>
+              <option value="pago_final">Pago total al entregar</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Monto</label>
+            <input type="number" id="f_mov_monto" placeholder="0" min="0" step="1">
+          </div>
+          <div class="field">
+            <label>Detalle</label>
+            <input type="text" id="f_mov_detalle" placeholder="Ej: repuesto fuente, seña...">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnAdd">+ Nueva orden de trabajo</button>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="filterText" placeholder="Buscar por cliente, teléfono o equipo...">
+      <select id="filterEstado">
+        <option value="todos">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="entregado">Entregado</option>
+      </select>
+      <select id="filterPago">
+        <option value="todos">Todos los pagos</option>
+        <option value="debe">Debe / parcial</option>
+        <option value="pagado">Pagado</option>
+      </select>
+    </div>
+
+    <div id="ledger" class="ledger"></div>
+    <div id="emptyMsg" class="empty" style="display:none;"></div>
+  </section>
+
+  <!-- ================= TAB: CLIENTES ================= -->
+  <section id="tab-clientes" class="tab-content">
+
+    <div id="clienteDetalle" style="display:none;">
+      <button class="btn-ghost" id="btnVolverClientes">← Volver a clientes</button>
+      <div class="panel" id="clienteDetalleInfo"></div>
+      <h2 class="section-title">Historial de trabajos</h2>
+      <div id="clienteJobs" class="ledger"></div>
+    </div>
+
+    <div id="clientesListaWrap">
+      <div class="panel">
+        <h2>Nuevo cliente</h2>
+        <div class="grid2">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" id="c_nombre" placeholder="Nombre y apellido">
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="text" id="c_telefono" placeholder="Opcional">
+          </div>
+        </div>
+        <div class="field">
+          <label>Notas</label>
+          <textarea id="c_notas" placeholder="Opcional"></textarea>
+        </div>
+        <button class="btn-primary" id="btnAddClient">+ Agregar cliente</button>
+      </div>
+
+      <div class="filters">
+        <input type="text" id="filterClientes" placeholder="Buscar cliente...">
+      </div>
+
+      <div id="clientesLista"></div>
+    </div>
+  </section>
+
+  <!-- ================= TAB: CAJA ================= -->
+  <section id="tab-caja" class="tab-content">
+
+    <div class="totals">
+      <div class="cell" id="cellIngresos" style="cursor:pointer;">
+        <div class="label">Ingresos (tocar)</div>
+        <div class="value income" id="totalIngresos">$ 0</div>
+      </div>
+      <div class="cell" id="cellGastos" style="cursor:pointer;">
+        <div class="label">Gastos (tocar)</div>
+        <div class="value expense" id="totalGastos">$ 0</div>
+      </div>
+      <div class="cell">
+        <div class="label">Ganancia neta</div>
+        <div class="value net" id="totalNeto">$ 0</div>
+      </div>
+      <div class="cell" id="cellPorCobrar" style="cursor:pointer;">
+        <div class="label">Por cobrar (tocar)</div>
+        <div class="value porcobrar" id="totalPorCobrar">$ 0</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Resumen</h2>
+      <div class="periodo-tabs">
+        <button class="periodo-btn active" id="resumenBtnSemana" data-periodo="semana">Semana</button>
+        <button class="periodo-btn" id="resumenBtnMes" data-periodo="mes">Mes</button>
+        <button class="periodo-btn" id="resumenBtnAnio" data-periodo="anio">Año</button>
+      </div>
+      <div class="periodo-nav">
+        <button class="btn-ghost btn-sm" id="resumenPrev">← Anterior</button>
+        <span id="resumenLabel" class="periodo-label"></span>
+        <button class="btn-ghost btn-sm" id="resumenNext">Siguiente →</button>
+      </div>
+      <div class="entry-money" style="margin-top:14px;">
+        <div><b>Ingresos</b><span class="income" id="resumenIngresos">$ 0</span></div>
+        <div><b>Gastos</b><span class="expense" id="resumenGastos">$ 0</span></div>
+        <div><b>Ganancia</b><span class="profit" id="resumenNeto">$ 0</span></div>
+      </div>
+      <p class="hint" style="margin-top:10px;">Incluye movimientos de trabajos y de caja general juntos — es la foto completa del negocio en ese período.</p>
+      <button class="btn-ghost btn-sm" id="btnCompartirResumen">💬 Compartir por WhatsApp</button>
+    </div>
+
+    <div class="panel">
+      <h2>Movimiento de caja</h2>
+      <p class="hint">Ingresos o gastos generales del negocio que no son de un trabajo puntual (alquiler, herramientas, venta de accesorios, etc).</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="cajaTab_tipo">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="cajaTab_fecha">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Monto</label>
+          <input type="number" id="cajaTab_monto" placeholder="0" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Categoría (opcional)</label>
+          <input type="text" id="cajaTab_categoria" list="categoriasList" placeholder="Ej: alquiler, repuestos...">
+          <datalist id="categoriasList"></datalist>
+        </div>
+      </div>
+      <div class="field">
+        <label>Detalle</label>
+        <input type="text" id="cajaTab_detalle" placeholder="Ej: alquiler del local, compra de herramienta...">
+      </div>
+      <button class="btn-primary" id="btnAddCajaTab">+ Agregar movimiento</button>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="filterCaja" placeholder="Buscar por detalle...">
+      <select id="filterCategoria">
+        <option value="todas">Todas las categorías</option>
+      </select>
+    </div>
+
+    <div id="cajaLista" class="ledger"></div>
+    <div id="cajaEmptyMsg" class="empty" style="display:none;"></div>
+  </section>
+
+  <!-- ================= TAB: SINCRONIZAR ================= -->
+  <section id="tab-sync" class="tab-content">
+    <div class="panel">
+      <h2>Sincronización</h2>
+      <p class="hint">Los datos se sincronizan solos entre todos los dispositivos que abran esta app — sin login, sin botones de conectar. Cargás algo en un celular y a los pocos segundos aparece en los demás, automático.</p>
+      <p id="driveStatus" class="drive-status">Conectando...</p>
+    </div>
+
+    <div class="panel">
+      <h2>Copia de seguridad manual</h2>
+      <p class="hint">Alternativa sin conexión: descargá un archivo con todos tus datos, o cargá uno que ya tengas.</p>
+      <div class="btn-row">
+        <button class="btn-ghost" id="btnExportFile">Descargar copia (.json)</button>
+        <button class="btn-ghost" id="btnImportFileTrigger">Cargar copia (.json)</button>
+      </div>
+      <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+    </div>
+  </section>
+
+</div>
+
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

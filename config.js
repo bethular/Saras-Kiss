@@ -1,22 +1,16 @@
-// ============================================
-// CONFIGURACIÓN DE SARA'SKISS
-// ============================================
-// Este archivo lo comparten el catálogo público y la app de administración.
+// -----------------------------------------------------------------
+// CONFIGURACIÓN — completá esto siguiendo el archivo README.md
+// -----------------------------------------------------------------
 
-// --- Firebase (ya configurado con tu proyecto real) ---
-const firebaseConfig = {
-  apiKey: "AIzaSyA9vyf8tMLqz0zm7DetoaHfJvvMg8BjrjU",
-  authDomain: "saraskiss-9e343.firebaseapp.com",
-  projectId: "saraskiss-9e343",
-  storageBucket: "saraskiss-9e343.firebasestorage.app",
-  messagingSenderId: "605430066412",
-  appId: "1:605430066412:web:e7482cf9bbb3151d3e89c9"
+// Pegá acá la configuración de tu proyecto de Firebase.
+// La conseguís en: Configuración del proyecto (⚙️) → Tus apps → app Web.
+// Reemplazá TODO este objeto por el que te da Firebase (los nombres de
+// las propiedades son siempre los mismos: apiKey, authDomain, etc.)
+const FIREBASE_CONFIG = {
+  apiKey: "PEGÁ_ACÁ_TU_API_KEY",
+  authDomain: "PEGÁ_ACÁ.firebaseapp.com",
+  projectId: "PEGÁ_ACÁ_TU_PROJECT_ID",
+  storageBucket: "PEGÁ_ACÁ.appspot.com",
+  messagingSenderId: "PEGÁ_ACÁ",
+  appId: "PEGÁ_ACÁ"
 };
-
-// --- Número de WhatsApp de Sara (el que recibe los pedidos) ---
-// IMPORTANTE: completar con el número real, con código de país, SIN el "+" ni espacios.
-// Ejemplo Argentina (Misiones), celular 376-4123456 -> "5493764123456"
-const TELEFONO_SARA = "+5493755603085";
-
-// --- Nombre del negocio (para textos y mensajes) ---
-const NOMBRE_NEGOCIO = "Sara'sKiss";
