@@ -1,8 +1,7 @@
-const CACHE_NAME = 'saraskiss-admin-v1';
+const CACHE_NAME = 'saraskiss-admin-v2';
 const ASSETS = [
   './index.html',
-  './manifest.json',
-  '../config.js'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -22,10 +21,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Firebase y Google Fonts siempre van a la red (necesitan estar actualizados)
+  // Firebase, Google Fonts y config.js siempre van a la red (necesitan estar siempre actualizados)
   if (event.request.url.includes('firestore.googleapis.com') ||
       event.request.url.includes('googleapis.com') ||
-      event.request.url.includes('gstatic.com')) {
+      event.request.url.includes('gstatic.com') ||
+      event.request.url.includes('config.js')) {
     return;
   }
   event.respondWith(
