@@ -92,7 +92,14 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 document.getElementById('f_fecha').value = todayStr();
 document.getElementById('cajaTab_fecha').value = todayStr();
 
-async function renderAll() {
+let autoPushTimer = null;
+function scheduleAutoPush() {
+  if (typeof accessToken === 'undefined' || !accessToken) return;
+  clearTimeout(autoPushTimer);
+  autoPushTimer = setTimeout(() => { saveToDrive(); }, 2500);
+}
+
+async function renderAll(skipAutoPush) {
   currentClients = await getAllClients();
   currentJobs = (await getAllJobs()).map(normalizeJob);
   currentCaja = await getAllCaja();
@@ -102,6 +109,7 @@ async function renderAll() {
   renderCajaLista();
   renderResumen();
   if (viendoClienteId) renderClienteDetalle(viendoClienteId);
+  if (!skipAutoPush) scheduleAutoPush();
 }
 
 function renderClientDatalist() {
@@ -865,9 +873,10 @@ function renderClienteDetalle(clientId) {
     : '<div class="empty">Este cliente todavía no tiene trabajos cargados.</div>';
 }
 
-// ---------------- SINCRONIZACIÓN ----------------
-// (La sincronización ahora es automática con Firebase — no requiere botones.
-// Ver initFirestoreSync() en db.js y el arranque más abajo.)
+// ---------------- SINCRONIZAR: Drive ----------------
+document.getElementById('btnConnect').addEventListener('click', connectGoogle);
+document.getElementById('btnSaveDrive').addEventListener('click', saveToDrive);
+document.getElementById('btnLoadDrive').addEventListener('click', loadFromDrive);
 
 // ---------------- SINCRONIZAR: archivo manual ----------------
 document.getElementById('btnExportFile').addEventListener('click', async () => {
@@ -910,10 +919,14 @@ if ('serviceWorker' in navigator) {
 }
 
 // ---------------- ARRANQUE ----------------
-setOnChangeCallback(() => {
-  renderAll();
-  const statusEl = document.getElementById('driveStatus');
-  if (statusEl) statusEl.textContent = '🔥 Sincronizado ✓ (' + new Date().toLocaleTimeString('es-AR') + ')';
+renderAll(true).then(() => {
+  function startGoogle() {
+    initGoogleClient();
+    attemptAutoSync();
+  }
+  if (window.__gsiLoaded || (typeof google !== 'undefined' && google.accounts)) {
+    startGoogle();
+  } else {
+    window.__onGsiReady = startGoogle;
+  }
 });
-initFirestoreSync();
-renderAll();
