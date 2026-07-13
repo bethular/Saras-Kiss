@@ -184,6 +184,12 @@
     font-family:'Nunito Sans', sans-serif; font-size:13px; color:var(--ink);
   }
   .field input:focus{ outline:none; border-color:var(--accent); }
+  .field select, .field textarea{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card); font-size:13px; color:var(--ink); font-family:inherit;
+  }
+  .field textarea{ resize:vertical; min-height:50px; }
+  .entrega-titulo{ font-size:11.5px; color:var(--ink-soft); margin:14px 0 8px; text-transform:uppercase; letter-spacing:.03em; }
   .preview-label{ font-size:11px; color:var(--ink-soft); margin:6px 0 6px; }
   .preview-box{
     background:var(--card); border:1px solid var(--line); border-radius:12px;
@@ -266,6 +272,8 @@
       <div class="sheet-h"><h3>Últimos datos</h3><span onclick="document.getElementById('ovCheckout').classList.remove('open')">Cerrar ✕</span></div>
       <div class="field"><label>Tu nombre</label><input type="text" id="coNombre" oninput="actualizarPreview()"></div>
       <div class="field"><label>Tu teléfono</label><input type="text" id="coTelefono" oninput="actualizarPreview()"></div>
+      <div class="entrega-titulo">Datos de entrega</div>
+      <div id="coCamposEntrega"></div>
       <div class="preview-label">Vista previa del mensaje</div>
       <div class="preview-box" id="preview"></div>
       <button class="wa-btn" id="btnEnviar" style="margin-top:14px;" onclick="enviarPedido()">Enviar pedido por WhatsApp</button>
@@ -307,24 +315,28 @@ const db = getFirestore(app);
 
 let productos = [];
 let categorias = [];
+let camposEntrega = [];
 let carrito = []; // { id, nombre, precio, cantidad, stock }
 let categoriaActiva = "Todo";
 let productoDetalleActual = null;
 
 async function cargarDatos(){
   try{
-    const [prodSnap, catSnap] = await Promise.all([
+    const [prodSnap, catSnap, campSnap] = await Promise.all([
       getDocs(collection(db, "productos")),
-      getDocs(collection(db, "categorias"))
+      getDocs(collection(db, "categorias")),
+      getDocs(collection(db, "camposEntrega"))
     ]);
     productos = prodSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.activo !== false);
     categorias = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    camposEntrega = campSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.orden||0)-(b.orden||0));
     document.getElementById('loadingMsg').style.display = 'none';
     if(productos.length === 0){
       document.getElementById('emptyMsg').style.display = 'block';
     }
     renderCategorias();
     renderGrid();
+    renderCamposEntrega();
   }catch(e){
     document.getElementById('loadingMsg').textContent = 'No se pudo cargar el catálogo. Revisá tu conexión.';
     console.error(e);
@@ -456,6 +468,22 @@ function actualizarTotal(){
   document.getElementById('btnContinuar').disabled = carrito.length === 0;
 }
 
+function renderCamposEntrega(){
+  const cont = document.getElementById('coCamposEntrega');
+  let perfil = {};
+  try{ perfil = JSON.parse(localStorage.getItem('saraskiss_perfil') || '{}'); }catch(e){ perfil = {}; }
+  if(perfil.nombre) document.getElementById('coNombre').value = perfil.nombre;
+  if(perfil.telefono) document.getElementById('coTelefono').value = perfil.telefono;
+  cont.innerHTML = camposEntrega.map(c => {
+    const val = perfil[c.id] || '';
+    if(c.tipo === 'select'){
+      const opciones = (c.opciones||[]).map(o => `<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('');
+      return `<div class="field"><label>${c.etiqueta}</label><select id="ce-${c.id}" onchange="actualizarPreview()"><option value="">Elegir...</option>${opciones}</select></div>`;
+    }
+    return `<div class="field"><label>${c.etiqueta}</label><input type="text" id="ce-${c.id}" value="${val.replace(/"/g,'')}" oninput="actualizarPreview()"></div>`;
+  }).join('');
+}
+
 window.abrirCheckout = function(){
   if(carrito.length === 0) return;
   document.getElementById('ovCart').classList.remove('open');
@@ -468,6 +496,11 @@ window.actualizarPreview = function(){
   const telefono = document.getElementById('coTelefono').value.trim();
   const total = carrito.reduce((a,i) => a + i.precio*i.cantidad, 0);
   const items = carrito.map(i => `🛍 ${i.nombre} x${i.cantidad} - $${(i.precio*i.cantidad).toLocaleString('es-AR')}`).join('\n');
+  const entregaTexto = camposEntrega.map(c => {
+    const el = document.getElementById('ce-' + c.id);
+    const v = el ? el.value.trim() : '';
+    return v ? `${c.etiqueta}: ${v}` : null;
+  }).filter(Boolean).join('\n');
   document.getElementById('preview').textContent =
 `¡Hola! Quiero hacer este pedido a ${NOMBRE_NEGOCIO} 🧵
 
@@ -477,7 +510,7 @@ ${items}
 
 📌 Datos:
 Nombre: ${nombre || '________'}
-Teléfono: ${telefono || '________'}
+Teléfono: ${telefono || '________'}${entregaTexto ? '\n' + entregaTexto : ''}
 
 ¡Gracias!`;
 }
@@ -495,6 +528,11 @@ window.enviarPedido = async function(){
 
   const total = carrito.reduce((a,i) => a + i.precio*i.cantidad, 0);
   const items = carrito.map(i => ({ productoId:i.id, nombre:i.nombre, cantidad:i.cantidad, precio:i.precio }));
+  const entrega = camposEntrega.map(c => {
+    const el = document.getElementById('ce-' + c.id);
+    const v = el ? el.value.trim() : '';
+    return v ? { etiqueta: c.etiqueta, valor: v } : null;
+  }).filter(Boolean);
 
   try{
     await addDoc(collection(db, "pedidos"), {
@@ -502,9 +540,19 @@ window.enviarPedido = async function(){
       telefono: telefono,
       items,
       total,
+      entrega,
       estado: 'nuevo',
+      respondido: false,
+      cobrado: false,
+      entregado: false,
       fecha: serverTimestamp()
     });
+    const perfil = { nombre, telefono };
+    camposEntrega.forEach(c => {
+      const el = document.getElementById('ce-' + c.id);
+      if(el) perfil[c.id] = el.value.trim();
+    });
+    localStorage.setItem('saraskiss_perfil', JSON.stringify(perfil));
   }catch(e){
     console.error('No se pudo guardar el pedido en Firebase', e);
     // seguimos igual: el WhatsApp es la notificación real
