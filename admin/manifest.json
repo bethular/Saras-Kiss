@@ -1,0 +1,12 @@
+{
+  "name": "Sara'sKiss Admin",
+  "short_name": "SarasKiss",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FEF7ED",
+  "theme_color": "#A85C3C",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
